@@ -1,3 +1,5 @@
 <Solution>
+  <Project Path="SousChef.Core/SousChef.Core.csproj" />
+  <Project Path="SousChef.Tests/SousChef.Tests.csproj" />
   <Project Path="SousChef/SousChef.csproj" />
 </Solution>

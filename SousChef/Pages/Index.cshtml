@@ -1,10 +1,84 @@
 ﻿@page
+@using SousChef.Services
 @model IndexModel
 @{
-    ViewData["Title"] = "Home page";
+    ViewData["Title"] = "Library";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+<form method="get" class="row g-2 align-items-center mb-3">
+    <div class="col-12 col-md">
+        <input asp-for="Search" class="form-control" placeholder="Search recipes or ingredients…" type="search" />
+    </div>
+    <div class="col-auto">
+        <select asp-for="Sort" class="form-select" asp-items="Html.GetEnumSelectList<LibrarySort>()" onchange="this.form.submit()"></select>
+    </div>
+    <div class="col-auto form-check form-switch ms-2">
+        <input asp-for="Favourites" class="form-check-input" onchange="this.form.submit()" />
+        <label asp-for="Favourites" class="form-check-label">★ Favourites</label>
+    </div>
+    <div class="col-auto form-check form-switch ms-2">
+        <input asp-for="Mild" class="form-check-input" onchange="this.form.submit()" />
+        <label asp-for="Mild" class="form-check-label">Not spicy</label>
+    </div>
+    <div class="col-auto">
+        <button type="submit" class="btn btn-success">Search</button>
+    </div>
+</form>
+
+@if (Model.Recipes.Count == 0)
+{
+    <div class="text-center text-muted py-5">
+        @if (Model.IsFiltered)
+        {
+            <p class="fs-5">No recipes match.</p>
+            <a asp-page="/Index" class="btn btn-outline-secondary">Clear filters</a>
+        }
+        else
+        {
+            <p class="fs-5">Your recipe library is empty.</p>
+            <a asp-page="/Import" class="btn btn-success">Import recipe cards</a>
+        }
+    </div>
+}
+else
+{
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-3">
+        @foreach (RecipeSummary recipe in Model.Recipes)
+        {
+            <div class="col">
+                <div class="card h-100 shadow-sm sc-recipe-card">
+                    <a asp-page="/Recipe" asp-route-id="@recipe.Id" class="text-reset text-decoration-none">
+                        @if (recipe.HasHero)
+                        {
+                            <img src="/images/@recipe.Id/hero?v=@recipe.Version" class="card-img-top sc-card-img" alt="" loading="lazy" />
+                        }
+                        <div class="card-body pb-2">
+                            <h5 class="card-title mb-1">@recipe.Title</h5>
+                            <p class="card-text text-muted small mb-2">@recipe.Subtitle</p>
+                            <div class="d-flex flex-wrap gap-1">
+                                @if (recipe.TimeMaxMinutes.HasValue)
+                                {
+                                    <span class="badge text-bg-light">⏱ @recipe.TimeMaxMinutes min</span>
+                                }
+                                @foreach (string tag in recipe.Tags.Split('|', StringSplitOptions.RemoveEmptyEntries))
+                                {
+                                    <span class="badge @(recipe.IsSpicy && tag.Contains("Hot", StringComparison.OrdinalIgnoreCase) ? "text-bg-danger" : "text-bg-light")">@tag</span>
+                                }
+                                @if (recipe.HasWarnings)
+                                {
+                                    <span class="badge text-bg-warning" title="The parser had problems with this card">⚠ Check</span>
+                                }
+                            </div>
+                        </div>
+                    </a>
+                    <div class="card-footer bg-transparent border-0 d-flex justify-content-between align-items-center pt-0">
+                        <span class="small text-muted">@(recipe.TimesCooked > 0 ? $"Cooked {recipe.TimesCooked}×" : "Not cooked yet")</span>
+                        <form method="post" asp-page-handler="Favourite" asp-route-id="@recipe.Id" asp-route-search="@Model.Search" asp-route-favourites="@Model.Favourites" asp-route-mild="@Model.Mild" asp-route-sort="@Model.Sort">
+                            <button type="submit" class="btn btn-link p-0 fs-4 text-decoration-none sc-star @(recipe.IsFavourite ? "active" : "")" title="Favourite">@(recipe.IsFavourite ? "★" : "☆")</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}

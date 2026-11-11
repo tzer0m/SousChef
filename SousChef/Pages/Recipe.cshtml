@@ -1,0 +1,193 @@
+@page "{id:int}"
+@using SousChef.Core.Cooking
+@using SousChef.Core.Models
+@using SousChef.Services
+@model RecipeModel
+@{
+    ViewData["Title"] = Model.Recipe.Title;
+    long version = Model.Record.UpdatedAt.Ticks;
+    int largest = Model.Recipe.ServingSizes.Count > 0 ? Model.Recipe.ServingSizes.Max() : 4;
+    ViewDataDictionary listData = new(ViewData) { ["RecipeId"] = Model.Record.Id, ["Version"] = version, ["Checklist"] = false };
+}
+
+<div class="row g-4 mb-4">
+    <div class="col-lg-5">
+        @if (Model.Recipe.HeroImageKey != null)
+        {
+            <img src="/images/@Model.Record.Id/@Model.Recipe.HeroImageKey?v=@version" class="img-fluid rounded shadow-sm" alt="@Model.Recipe.Title" />
+        }
+    </div>
+    <div class="col-lg-7">
+        <div class="d-flex justify-content-between align-items-start gap-2">
+            <div>
+                <h1 class="h3 mb-1">@Model.Recipe.Title</h1>
+                <p class="text-muted mb-2">@Model.Recipe.Subtitle</p>
+            </div>
+            <form method="post" asp-page-handler="Favourite" asp-route-id="@Model.Record.Id">
+                <button type="submit" class="btn btn-link p-0 fs-2 text-decoration-none sc-star @(Model.Record.IsFavourite ? "active" : "")" title="Favourite">@(Model.Record.IsFavourite ? "★" : "☆")</button>
+            </form>
+        </div>
+        <div class="d-flex flex-wrap gap-1 mb-3">
+            @if (Model.Recipe.TimeMinMinutes.HasValue)
+            {
+                <span class="badge text-bg-light">⏱ @Model.Recipe.TimeMinMinutes@(Model.Recipe.TimeMaxMinutes != Model.Recipe.TimeMinMinutes ? $"–{Model.Recipe.TimeMaxMinutes}" : "") min</span>
+            }
+            @foreach (string tag in Model.Recipe.Tags)
+            {
+                <span class="badge @(tag == Model.Recipe.SpiceLevel ? "text-bg-danger" : "text-bg-light")">@tag</span>
+            }
+            @foreach (string extra in Model.Recipe.Extras)
+            {
+                <span class="badge text-bg-light">@extra</span>
+            }
+        </div>
+
+        <div class="mb-2 fw-semibold">Cooking for</div>
+        <div class="btn-group flex-wrap mb-2" role="group" aria-label="Number of people">
+            @for (int n = ServingScaler.MinServings; n <= ServingScaler.MaxServings; n++)
+            {
+                <a asp-route-id="@Model.Record.Id" asp-route-servings="@n" class="btn @(n == Model.Servings ? "btn-success" : "btn-outline-success")">@n</a>
+            }
+        </div>
+        @if (Model.ScalingNote.Length > 0)
+        {
+            <p class="small text-muted mb-2">The card has no @(Model.Servings)-person column, so quantities use @Model.ScalingNote.</p>
+        }
+        @if (Model.Servings > largest)
+        {
+            <div class="alert alert-warning py-2 small">That's more than the card's biggest size (@(largest)P). Check your pans are big enough, or cook in batches.</div>
+        }
+
+        <div class="d-flex flex-wrap gap-2 mt-3">
+            <a asp-page="/Cook" asp-route-id="@Model.Record.Id" asp-route-servings="@Model.Servings" class="btn btn-success btn-lg">Start cooking ▶</a>
+            <a href="/recipes/@Model.Record.Id/pdf" class="btn btn-outline-secondary btn-lg">Card PDF</a>
+            <a asp-page="/Edit" asp-route-id="@Model.Record.Id" class="btn btn-outline-secondary btn-lg">Edit</a>
+        </div>
+        <p class="small text-muted mt-3 mb-0">
+            @if (Model.Recipe.Number.HasValue)
+            {
+                <span>Recipe #@Model.Recipe.Number</span>
+            }
+            @if (Model.Recipe.WeekCode != null)
+            {
+                <span> · Week @Model.Recipe.WeekCode</span>
+            }
+            <span> · @(Model.Record.TimesCooked > 0 ? $"Cooked {Model.Record.TimesCooked}×, last on {Model.Record.LastCookedAt!.Value.ToLocalTime():d MMM yyyy}" : "Not cooked yet")</span>
+        </p>
+    </div>
+</div>
+
+@if (Model.Recipe.ParseWarnings.Count > 0)
+{
+    <div class="alert alert-warning">
+        <strong>The parser had trouble with this card,</strong> so check it against the <a href="/recipes/@Model.Record.Id/pdf">original PDF</a> and <a asp-page="/Edit" asp-route-id="@Model.Record.Id">fix anything that's wrong</a>:
+        <ul class="mb-0">
+            @foreach (string warning in Model.Recipe.ParseWarnings)
+            {
+                <li>@warning</li>
+            }
+        </ul>
+    </div>
+}
+
+<div class="row g-4">
+    <div class="col-lg-4">
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <h2 class="h5">Ingredients <span class="text-muted fs-6">for @Model.Servings</span></h2>
+                <partial name="_IngredientList" model="Model.BoxIngredients" view-data="listData" />
+                @if (Model.PantryIngredients.Count > 0 || Model.Recipe.ImpliedPantry.Count > 0)
+                {
+                    <h3 class="h6 mt-3">From your cupboard</h3>
+                    <partial name="_IngredientList" model="Model.PantryIngredients" view-data="listData" />
+                    @if (Model.Recipe.ImpliedPantry.Count > 0)
+                    {
+                        <p class="small text-muted mt-2 mb-0">Also used: @string.Join(", ", Model.Recipe.ImpliedPantry)</p>
+                    }
+                }
+            </div>
+        </div>
+        @if (Model.Recipe.Tools.Count > 0)
+        {
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h2 class="h5">Tools</h2>
+                    <p class="mb-0">@string.Join(", ", Model.Recipe.Tools)</p>
+                </div>
+            </div>
+        }
+        @if (Model.Recipe.Allergens.Count > 0)
+        {
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h2 class="h5">Allergens</h2>
+                    <p class="mb-1">@string.Join(", ", Model.Recipe.Allergens.Select(a => a.Name))</p>
+                    <p class="small text-muted mb-0">Always check the packaging for the latest allergen information.</p>
+                </div>
+            </div>
+        }
+        @if (Model.Recipe.Nutrition.Count > 0)
+        {
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h2 class="h5">Nutrition</h2>
+                    <table class="table table-sm small mb-1">
+                        <thead><tr><th></th><th class="text-end">Per serving</th><th class="text-end">Per 100g</th></tr></thead>
+                        <tbody>
+                            @foreach (NutritionValue value in Model.Recipe.Nutrition)
+                            {
+                                <tr><td>@value.Name <span class="text-muted">@(value.Unit.Length > 0 ? $"({value.Unit})" : "")</span></td><td class="text-end">@value.PerServing</td><td class="text-end">@value.Per100g</td></tr>
+                            }
+                        </tbody>
+                    </table>
+                    @if (Model.Recipe.NutritionNote != null)
+                    {
+                        <p class="small text-muted mb-0">@Model.Recipe.NutritionNote</p>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="col-lg-8">
+        <h2 class="h5">Method</h2>
+        @foreach (AnnotatedStep step in Model.Steps)
+        {
+            <div class="card shadow-sm mb-3">
+                <div class="row g-0">
+                    @if (step.Step.ImageKey != null)
+                    {
+                        <div class="col-sm-4">
+                            <img src="/images/@Model.Record.Id/@step.Step.ImageKey?v=@version" class="img-fluid rounded-start sc-step-img" alt="" loading="lazy" />
+                        </div>
+                    }
+                    <div class="@(step.Step.ImageKey != null ? "col-sm-8" : "col-12")">
+                        <div class="card-body">
+                            <h3 class="h6 sc-step-title"><span class="sc-step-number">@step.Step.Number</span> @step.Step.Title</h3>
+                            <ol class="list-unstyled mb-0">
+                                @foreach (AnnotatedSubStep subStep in step.SubSteps)
+                                {
+                                    <partial name="_SubStep" model="subStep" view-data="@(new ViewDataDictionary(ViewData) { ["TimerLabel"] = step.Step.Title, ["Interactive"] = false })" />
+                                }
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <div class="card shadow-sm mb-3">
+            <div class="card-body">
+                <h2 class="h5">Notes</h2>
+                <form method="post" asp-page-handler="Notes" asp-route-id="@Model.Record.Id">
+                    <textarea name="notes" class="form-control mb-2" rows="3" placeholder="e.g. Half the sambal was plenty for the kids">@Model.Record.Notes</textarea>
+                    <button type="submit" class="btn btn-outline-success btn-sm">Save notes</button>
+                </form>
+            </div>
+        </div>
+
+        <form method="post" asp-page-handler="Delete" asp-route-id="@Model.Record.Id" onsubmit="return confirm('Delete this recipe?');" class="text-end">
+            <button type="submit" class="btn btn-link text-danger btn-sm">Delete recipe</button>
+        </form>
+    </div>
+</div>

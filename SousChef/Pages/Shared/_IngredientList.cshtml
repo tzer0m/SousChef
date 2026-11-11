@@ -1,0 +1,46 @@
+@using SousChef.Core.Cooking
+@using SousChef.Services
+@model List<IngredientLine>
+@{
+    int recipeId = (int)ViewData["RecipeId"]!;
+    long version = (long)ViewData["Version"]!;
+    bool checklist = ViewData["Checklist"] is true;
+    bool anyImages = Model.Any(l => l.Ingredient.ImageKey != null);
+}
+<ul class="list-unstyled sc-ingredients mb-0">
+    @foreach (IngredientLine line in Model)
+    {
+        <li>
+            <label class="sc-ingredient-row">
+                @if (checklist)
+                {
+                    <input type="checkbox" class="form-check-input sc-check" data-key="ingredient:@line.Ingredient.Name" />
+                }
+                @if (line.Ingredient.ImageKey != null)
+                {
+                    <img src="/images/@recipeId/@line.Ingredient.ImageKey?v=@version" alt="" class="sc-thumb" loading="lazy" />
+                }
+                else if (anyImages)
+                {
+                    <span class="sc-thumb sc-thumb-empty"></span>
+                }
+                <span class="sc-ingredient-amount">@line.Amount</span>
+                <span class="sc-ingredient-name">
+                    @line.Ingredient.Name
+                    @if (line.Ingredient.IsHot)
+                    {
+                        <span title="Hot">🌶</span>
+                    }
+                    @if (line.Ingredient.StoreInFridge)
+                    {
+                        <span class="text-muted small" title="Store in the fridge">❄</span>
+                    }
+                    @if (line.Allergens.Length > 0)
+                    {
+                        <span class="d-block small text-muted">Contains @line.Allergens</span>
+                    }
+                </span>
+            </label>
+        </li>
+    }
+</ul>

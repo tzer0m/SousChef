@@ -361,3 +361,8 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+# SousChef: HelloFresh card PDFs used for parser tests (their content, not ours)
+samples/
+
+# SousChef: runtime data (SQLite database and anything else the app writes)
+**/App_Data/

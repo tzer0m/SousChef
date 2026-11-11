@@ -1,0 +1,29 @@
+@using SousChef.Core.Cooking
+@using SousChef.Services
+@model AnnotatedSubStep
+@{
+    string label = ViewData["TimerLabel"] as string ?? string.Empty;
+    bool interactive = ViewData["Interactive"] is true;
+    string timerLabel = Model.SubStep.Letter.Length > 0 ? $"{label} ({Model.SubStep.Letter})" : label;
+}
+<li class="sc-substep">
+    @if (Model.SubStep.Letter.Length > 0)
+    {
+        <span class="sc-letter">@Model.SubStep.Letter</span>
+    }
+    <div class="sc-substep-body">
+        @if (Model.SubStep.IsParallel)
+        {
+            <span class="badge sc-meanwhile">Meanwhile</span>
+        }
+        <span>@SegmentRenderer.Render(Model.Segments, timerLabel, interactive)</span>
+        @if (Model.SubStep.Tip != null)
+        {
+            <div class="sc-tip"><strong>Tip:</strong> @Model.SubStep.Tip</div>
+        }
+        @if (Model.SubStep.Important != null)
+        {
+            <div class="sc-important"><strong>Important:</strong> @Model.SubStep.Important</div>
+        }
+    </div>
+</li>

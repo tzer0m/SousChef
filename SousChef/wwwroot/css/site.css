@@ -1,5 +1,12 @@
+:root {
+  --sc-green: #2e7d4f;
+  --sc-green-light: #e8f3ec;
+  --sc-hot: #c8372d;
+  --sc-amber: #f0a020;
+}
+
 html {
-  font-size: 14px;
+  font-size: 15px;
 }
 
 @media (min-width: 768px) {
@@ -8,24 +15,360 @@ html {
   }
 }
 
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
-}
-
-html {
-  position: relative;
-  min-height: 100%;
-}
-
 body {
-  margin-bottom: 60px;
+  background: #f7f8f6;
 }
 
-.form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
-  color: var(--bs-secondary-color);
-  text-align: end;
+.btn:focus, .btn:active:focus, .form-control:focus, .form-check-input:focus, .form-select:focus {
+  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem rgba(46, 125, 79, 0.5);
 }
 
-.form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
-  text-align: start;
+.form-check-input:checked {
+  background-color: var(--sc-green);
+  border-color: var(--sc-green);
+}
+
+/* Library */
+.sc-card-img {
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+}
+
+.sc-recipe-card {
+  transition: transform 0.1s ease-in-out;
+}
+
+.sc-recipe-card:hover {
+  transform: translateY(-2px);
+}
+
+.sc-star {
+  color: #b5b5b5;
+  line-height: 1;
+}
+
+.sc-star.active {
+  color: var(--sc-amber);
+}
+
+/* Ingredients */
+.sc-ingredients li + li {
+  border-top: 1px solid #eee;
+}
+
+.sc-ingredient-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.35rem 0;
+  width: 100%;
+}
+
+.sc-ingredient-row .sc-check {
+  flex: none;
+  width: 1.4em;
+  height: 1.4em;
+  margin: 0;
+}
+
+.sc-ingredient-row:has(.sc-check:checked) .sc-ingredient-name,
+.sc-ingredient-row:has(.sc-check:checked) .sc-ingredient-amount {
+  text-decoration: line-through;
+  color: #999;
+}
+
+.sc-thumb {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.sc-thumb-empty {
+  background: var(--sc-green-light);
+}
+
+.sc-ingredient-amount {
+  flex: none;
+  min-width: 4.5rem;
+  font-weight: 600;
+}
+
+.sc-ingredient-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* Method */
+.sc-step-img {
+  height: 100%;
+  object-fit: cover;
+}
+
+.sc-step-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.8em;
+  height: 1.8em;
+  border-radius: 50%;
+  background: var(--sc-green);
+  color: #fff;
+  font-size: 0.85em;
+  margin-right: 0.3rem;
+}
+
+.sc-substep {
+  display: flex;
+  gap: 0.6rem;
+  margin-bottom: 0.6rem;
+}
+
+.sc-letter {
+  flex: none;
+  font-weight: 600;
+  color: var(--sc-green);
+  width: 1.1rem;
+}
+
+.sc-letter::after {
+  content: ")";
+}
+
+.sc-ingredient {
+  font-weight: 600;
+}
+
+.sc-hot {
+  color: var(--sc-hot);
+}
+
+.sc-amount {
+  display: inline-block;
+  margin: 0 0.15rem 0 0.25rem;
+  padding: 0 0.4rem;
+  border-radius: 0.6rem;
+  background: var(--sc-green-light);
+  color: var(--sc-green);
+  font-size: 0.85em;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.sc-timer-text {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.sc-timer-chip {
+  border: 1px solid var(--sc-green);
+  background: #fff;
+  color: var(--sc-green);
+  border-radius: 1rem;
+  padding: 0.1rem 0.6rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.sc-timer-chip:hover, .sc-timer-chip.running {
+  background: var(--sc-green);
+  color: #fff;
+}
+
+.sc-meanwhile {
+  background: #eef0ff;
+  color: #4a4fa8;
+  margin-right: 0.3rem;
+}
+
+.sc-tip, .sc-important {
+  margin-top: 0.4rem;
+  padding: 0.4rem 0.6rem;
+  border-radius: 0.4rem;
+  font-size: 0.92em;
+}
+
+.sc-tip {
+  background: var(--sc-green-light);
+}
+
+.sc-important {
+  background: #fdecea;
+  border-left: 4px solid var(--sc-hot);
+}
+
+/* Cook mode */
+.sc-cook-mode header {
+  display: none;
+}
+
+.sc-cook-mode main {
+  padding-top: 0.75rem;
+  padding-bottom: 12rem !important;
+}
+
+.sc-cook-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.sc-slide {
+  display: none;
+}
+
+.sc-slide.active {
+  display: block;
+  animation: sc-fade 0.15s ease-in;
+}
+
+@keyframes sc-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.sc-cook-substeps {
+  font-size: 1.2rem;
+  line-height: 1.6;
+}
+
+.sc-cook-substeps .sc-substep {
+  margin-bottom: 1rem;
+}
+
+html, body {
+  overflow-x: hidden;
+}
+
+.sc-cook-nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.6rem max(0.75rem, env(safe-area-inset-right)) calc(0.6rem + env(safe-area-inset-bottom)) max(0.75rem, env(safe-area-inset-left));
+  background: #fff;
+  border-top: 1px solid #e3e3e3;
+  z-index: 20;
+}
+
+.sc-dots {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 auto;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.sc-dot {
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 50%;
+  border: 0;
+  padding: 0;
+  background: #cfd8d2;
+}
+
+.sc-dot.active {
+  background: var(--sc-green);
+}
+
+.sc-timer-tray {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 4.6rem;
+  display: flex;
+  gap: 0.5rem;
+  padding: 0 0.75rem;
+  overflow-x: auto;
+  z-index: 19;
+}
+
+.sc-timer {
+  position: relative;
+  overflow: hidden;
+  flex: none;
+  min-width: 13rem;
+  padding: 0.5rem 0.7rem;
+  border-radius: 0.6rem;
+  background: #fff;
+  border: 2px solid var(--sc-green);
+  box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.12);
+}
+
+.sc-timer-bar {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  background: var(--sc-green-light);
+  z-index: 0;
+}
+
+.sc-timer > *:not(.sc-timer-bar) {
+  position: relative;
+  z-index: 1;
+}
+
+.sc-timer-label {
+  font-size: 0.8rem;
+  color: #555;
+}
+
+.sc-timer-time {
+  font-size: 1.5rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.sc-timer-actions {
+  display: flex;
+  gap: 0.3rem;
+}
+
+.sc-timer-actions button {
+  border: 1px solid #ccc;
+  background: #fff;
+  border-radius: 0.4rem;
+  min-width: 2.4rem;
+  padding: 0.15rem 0.4rem;
+}
+
+.sc-timer-check {
+  border-color: var(--sc-amber);
+}
+
+.sc-timer-check .sc-timer-bar {
+  background: #fff3d6;
+}
+
+.sc-timer-done {
+  border-color: var(--sc-hot);
+  animation: sc-pulse 1s infinite;
+}
+
+.sc-timer-done .sc-timer-bar {
+  background: #fdecea;
+}
+
+.sc-timer.paused {
+  opacity: 0.7;
+}
+
+@keyframes sc-pulse {
+  50% {
+    box-shadow: 0 0 0 0.4rem rgba(200, 55, 45, 0.25);
+  }
 }

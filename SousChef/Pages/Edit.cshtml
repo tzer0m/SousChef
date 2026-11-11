@@ -1,0 +1,116 @@
+@page "{id:int}"
+@model EditModel
+@{
+    ViewData["Title"] = $"Edit {Model.Recipe.Title}";
+    List<int> sizes = Model.Recipe.ServingSizes;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0">Edit recipe</h1>
+    <div class="d-flex gap-2">
+        <a href="/recipes/@Model.Record.Id/pdf" target="_blank" class="btn btn-outline-secondary btn-sm">Open card PDF</a>
+        <a asp-page="/Recipe" asp-route-id="@Model.Record.Id" class="btn btn-outline-secondary btn-sm">Cancel</a>
+    </div>
+</div>
+
+@if (Model.Recipe.ParseWarnings.Count > 0)
+{
+    <div class="alert alert-warning small">
+        <strong>Things the parser flagged:</strong>
+        <ul class="mb-0">
+            @foreach (string warning in Model.Recipe.ParseWarnings)
+            {
+                <li>@warning</li>
+            }
+        </ul>
+    </div>
+}
+
+<form method="post">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div class="card shadow-sm mb-4">
+        <div class="card-body row g-3">
+            <div class="col-md-6">
+                <label asp-for="Form.Title" class="form-label">Title</label>
+                <input asp-for="Form.Title" class="form-control" />
+                <span asp-validation-for="Form.Title" class="text-danger small"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="Form.Subtitle" class="form-label">Subtitle</label>
+                <input asp-for="Form.Subtitle" class="form-control" />
+            </div>
+            <div class="col-6 col-md-2">
+                <label asp-for="Form.TimeMinMinutes" class="form-label">Time from (min)</label>
+                <input asp-for="Form.TimeMinMinutes" class="form-control" />
+            </div>
+            <div class="col-6 col-md-2">
+                <label asp-for="Form.TimeMaxMinutes" class="form-label">to (min)</label>
+                <input asp-for="Form.TimeMaxMinutes" class="form-control" />
+            </div>
+            <div class="col-md-5">
+                <label asp-for="Form.Tags" class="form-label">Tags (comma separated)</label>
+                <input asp-for="Form.Tags" class="form-control" />
+            </div>
+            <div class="col-md-3">
+                <label asp-for="Form.SpiceLevel" class="form-label">Spice level</label>
+                <input asp-for="Form.SpiceLevel" class="form-control" placeholder="e.g. Very Hot" />
+            </div>
+            <div class="col-12">
+                <label asp-for="Form.Tools" class="form-label">Tools (comma separated)</label>
+                <input asp-for="Form.Tools" class="form-control" />
+            </div>
+        </div>
+    </div>
+
+    <h2 class="h5">Ingredients</h2>
+    <div class="table-responsive mb-4">
+        <table class="table table-sm align-middle sc-edit-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th style="width: 8rem">Unit</th>
+                    @foreach (int size in sizes)
+                    {
+                        <th style="width: 5.5rem">@(size)P</th>
+                    }
+                    <th class="text-center" style="width: 5rem">Pantry</th>
+                </tr>
+            </thead>
+            <tbody>
+                @for (int i = 0; i < Model.Form.Ingredients.Count; i++)
+                {
+                    <tr>
+                        <td><input asp-for="Form.Ingredients[i].Name" class="form-control form-control-sm" placeholder="@(i >= Model.Recipe.Ingredients.Count ? "Add an ingredient" : "")" /></td>
+                        <td><input asp-for="Form.Ingredients[i].Unit" class="form-control form-control-sm" /></td>
+                        @for (int s = 0; s < sizes.Count; s++)
+                        {
+                            <td><input asp-for="Form.Ingredients[i].Quantities[s]" type="number" step="any" min="0" class="form-control form-control-sm" /></td>
+                        }
+                        <td class="text-center"><input asp-for="Form.Ingredients[i].IsPantry" class="form-check-input" /></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        <p class="small text-muted">Clear a name to remove that ingredient.</p>
+    </div>
+
+    <h2 class="h5">Method</h2>
+    <p class="small text-muted">One sub-step per line, starting <code>a)</code>, <code>b)</code> and so on. Add <code>TIP:</code> or <code>IMPORTANT:</code> lines under the sub-step they belong to. Times like "10-12 mins" become timers automatically.</p>
+    @for (int i = 0; i < Model.Form.Steps.Count; i++)
+    {
+        <div class="card shadow-sm mb-3">
+            <div class="card-body">
+                <div class="input-group mb-2">
+                    <span class="input-group-text">Step @(i + 1)</span>
+                    <input asp-for="Form.Steps[i].Title" class="form-control" />
+                </div>
+                <textarea asp-for="Form.Steps[i].Text" class="form-control font-monospace small" rows="6"></textarea>
+            </div>
+        </div>
+    }
+
+    <div class="d-flex gap-2 mb-5">
+        <button type="submit" class="btn btn-success">Save changes</button>
+        <a asp-page="/Recipe" asp-route-id="@Model.Record.Id" class="btn btn-outline-secondary">Cancel</a>
+    </div>
+</form>

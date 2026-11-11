@@ -1,0 +1,82 @@
+@page
+@using SousChef.Services
+@model ImportModel
+@{
+    ViewData["Title"] = "Import";
+}
+
+<h1 class="h3 mb-3">Import recipe cards</h1>
+
+@if (Model.StatusMessage != null)
+{
+    <div class="alert alert-success">@Model.StatusMessage</div>
+}
+@if (Model.SyncMessage != null)
+{
+    <div class="alert @(Model.SyncMessage.StartsWith("Couldn't") || Model.SyncMessage.StartsWith("Paperless isn't") ? "alert-warning" : "alert-success")">@Model.SyncMessage</div>
+}
+
+<form method="post" asp-page-handler="Sync" class="card card-body mb-4 shadow-sm">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <div>
+            <strong>Paperless</strong>
+            @if (Model.PaperlessConfigured)
+            {
+                <span class="text-muted">: imports new documents tagged <code>@Model.PaperlessTag</code>, using Paperless's OCR for scans.</span>
+            }
+            else
+            {
+                <span class="text-muted">: not set up. Add <code>Paperless:BaseUrl</code> and <code>Paperless:Token</code> to the settings to sync cards tagged <code>@Model.PaperlessTag</code>.</span>
+            }
+        </div>
+        <button type="submit" class="btn btn-success" disabled="@(!Model.PaperlessConfigured)">Sync from Paperless</button>
+    </div>
+</form>
+
+<form method="post" enctype="multipart/form-data" class="card card-body mb-4 shadow-sm">
+    <label for="files" class="form-label">Or upload HelloFresh recipe card PDFs: the 2-page downloads, or scans that already have a text layer (e.g. from Paperless).</label>
+    <input id="files" asp-for="Files" type="file" accept="application/pdf,.pdf" multiple class="form-control mb-3" required />
+    <p class="small text-muted mb-3">Importing a card again updates the existing recipe and keeps your favourites, notes and cooking history.</p>
+    <div>
+        <button type="submit" class="btn btn-success">Import</button>
+    </div>
+</form>
+
+@if (Model.Outcomes.Count > 0)
+{
+    <h2 class="h5">Results</h2>
+    <ul class="list-group mb-4">
+        @foreach (ImportOutcome outcome in Model.Outcomes)
+        {
+            <li class="list-group-item">
+                @if (outcome.Succeeded)
+                {
+                    <span class="badge text-bg-success me-2">@(outcome.IsUpdate ? "Updated" : "Added")</span>
+                    <a asp-page="/Recipe" asp-route-id="@outcome.RecipeId">@outcome.Title</a>
+                    @if (outcome.Message != null)
+                    {
+                        <span class="small text-muted">: @outcome.Message</span>
+                    }
+                }
+                else
+                {
+                    <span class="badge text-bg-danger me-2">Failed</span>
+                    <span>@outcome.FileName: @outcome.Message</span>
+                }
+                @if (outcome.Warnings.Count > 0)
+                {
+                    <ul class="small text-warning-emphasis mb-0 mt-1">
+                        @foreach (string warning in outcome.Warnings)
+                        {
+                            <li>@warning</li>
+                        }
+                    </ul>
+                }
+            </li>
+        }
+    </ul>
+}
+
+<form method="post" asp-page-handler="Reparse" class="text-muted small">
+    Improved the parser? <button type="submit" class="btn btn-link btn-sm p-0 align-baseline">Re-parse all stored cards</button> from their original PDFs.
+</form>

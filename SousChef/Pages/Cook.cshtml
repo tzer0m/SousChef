@@ -1,0 +1,104 @@
+@page "{id:int}"
+@using SousChef.Core.Cooking
+@using SousChef.Services
+@model CookModel
+@{
+    ViewData["Title"] = $"Cooking {Model.Recipe.Title}";
+    ViewData["BodyClass"] = "sc-cook-mode";
+    long version = Model.Record.UpdatedAt.Ticks;
+    ViewDataDictionary listData = new(ViewData) { ["RecipeId"] = Model.Record.Id, ["Version"] = version, ["Checklist"] = true };
+    int total = Model.Steps.Count + 2;
+}
+
+<div id="cook" data-recipe-id="@Model.Record.Id" data-servings="@Model.Servings">
+    <div class="sc-cook-header">
+        <a asp-page="/Recipe" asp-route-id="@Model.Record.Id" class="btn btn-sm btn-outline-secondary">✕ Exit</a>
+        <div class="text-truncate px-2"><strong>@Model.Recipe.Title</strong> <span class="text-muted">· for @Model.Servings</span></div>
+        <span class="sc-progress text-muted small" id="cook-progress"></span>
+    </div>
+
+    <section class="sc-slide" data-title="Get ready">
+        <h1 class="h3">Get ready</h1>
+        <p class="text-muted">Tick things off as you get them out.</p>
+        <div class="row g-4">
+            <div class="col-md-6">
+                <h2 class="h5">From the box</h2>
+                <partial name="_IngredientList" model="Model.Ingredients.FindAll(i => !i.Ingredient.IsPantry)" view-data="listData" />
+            </div>
+            <div class="col-md-6">
+                <h2 class="h5">From your cupboard</h2>
+                <partial name="_IngredientList" model="Model.Ingredients.FindAll(i => i.Ingredient.IsPantry)" view-data="listData" />
+                @if (Model.Recipe.ImpliedPantry.Count > 0)
+                {
+                    <ul class="list-unstyled sc-ingredients mt-2">
+                        @foreach (string item in Model.Recipe.ImpliedPantry)
+                        {
+                            <li><label class="sc-ingredient-row"><input type="checkbox" class="form-check-input sc-check" data-key="pantry:@item" /><span class="sc-ingredient-name">@item</span></label></li>
+                        }
+                    </ul>
+                }
+                @if (Model.Recipe.Tools.Count > 0)
+                {
+                    <h2 class="h5 mt-4">Tools</h2>
+                    <ul class="list-unstyled sc-ingredients">
+                        @foreach (string tool in Model.Recipe.Tools)
+                        {
+                            <li><label class="sc-ingredient-row"><input type="checkbox" class="form-check-input sc-check" data-key="tool:@tool" /><span class="sc-ingredient-name">@tool</span></label></li>
+                        }
+                    </ul>
+                }
+            </div>
+        </div>
+    </section>
+
+    @foreach (AnnotatedStep step in Model.Steps)
+    {
+        <section class="sc-slide" data-title="Step @step.Step.Number">
+            <div class="row g-4">
+                @if (step.Step.ImageKey != null)
+                {
+                    <div class="col-md-5">
+                        <img src="/images/@Model.Record.Id/@step.Step.ImageKey?v=@version" class="img-fluid rounded shadow-sm" alt="" />
+                    </div>
+                }
+                <div class="@(step.Step.ImageKey != null ? "col-md-7" : "col-12")">
+                    <h1 class="h3 sc-step-title"><span class="sc-step-number">@step.Step.Number</span> @step.Step.Title</h1>
+                    <ol class="list-unstyled sc-cook-substeps">
+                        @foreach (AnnotatedSubStep subStep in step.SubSteps)
+                        {
+                            <partial name="_SubStep" model="subStep" view-data="@(new ViewDataDictionary(ViewData) { ["TimerLabel"] = step.Step.Title, ["Interactive"] = true })" />
+                        }
+                    </ol>
+                </div>
+            </div>
+        </section>
+    }
+
+    <section class="sc-slide text-center" data-title="Done">
+        <div class="py-5">
+            <div class="display-1">🍽</div>
+            <h1 class="h2">Enjoy!</h1>
+            <p class="text-muted">Any running timers are still listed below.</p>
+            <form method="post" asp-page-handler="Cooked" asp-route-id="@Model.Record.Id" id="cooked-form">
+                <button type="submit" class="btn btn-success btn-lg">Mark as cooked</button>
+            </form>
+        </div>
+    </section>
+
+    <div class="sc-timer-tray" id="timer-tray" aria-live="polite"></div>
+
+    <nav class="sc-cook-nav">
+        <button type="button" class="btn btn-outline-secondary btn-lg" id="cook-prev">◀ Back</button>
+        <div class="sc-dots" id="cook-dots">
+            @for (int i = 0; i < total; i++)
+            {
+                <button type="button" class="sc-dot" data-index="@i" aria-label="Go to slide @(i + 1)"></button>
+            }
+        </div>
+        <button type="button" class="btn btn-success btn-lg" id="cook-next">Next ▶</button>
+    </nav>
+</div>
+
+@section Scripts {
+    <script src="~/js/cook.js" asp-append-version="true"></script>
+}
